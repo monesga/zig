@@ -4,6 +4,7 @@
 
 const std = @import("std");
 const builtin = @import("builtin");
+
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
     std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
@@ -121,4 +122,21 @@ test "blocks" {
     };
     try std.testing.expectEqual(@as(i32, 124), x);
     try std.testing.expectEqual(@as(i32, 124), y);
+}
+
+test "basic strings" {
+    const stdout = std.io.getStdErr().writer();
+    const str: []const u8 = "Hello, world!";
+    try std.testing.expectEqual(@as(u32, 13), str.len);
+    try std.testing.expectEqual(@as(u8, 'H'), str[0]);
+    try std.testing.expectEqual(@as(u8, 'o'), str[4]);
+    try std.testing.expectEqual(@as(u8, '!'), str[12]);
+    try stdout.print(
+        "<<string: {s} ",
+        .{str},
+    );
+    try stdout.print(
+        "slice[0..5]: {s}>> ",
+        .{str[0..5]},
+    );
 }

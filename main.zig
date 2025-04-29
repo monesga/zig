@@ -3,7 +3,7 @@
 //! is to delete this file and start with root.zig instead.
 
 const std = @import("std");
-
+const builtin = @import("builtin");
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
     std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
@@ -93,4 +93,32 @@ test "array replicate" {
     try std.testing.expectEqual(@as(u8, 1), b[2]);
     try std.testing.expectEqual(@as(u8, 2), b[3]);
     try std.testing.expectEqual(@as(u32, 4), b.len);
+}
+
+test "dynamic slice" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    var n: usize = 0;
+
+    if (builtin.target.os.tag == .windows) {
+        n = 10;
+    } else if (builtin.target.os.tag == .linux) {
+        n = 20;
+    } else {
+        n = 30;
+    }
+    const buffer = try allocator.alloc(u8, n);
+    defer allocator.free(buffer);
+    const slice = buffer[0..];
+    try std.testing.expectEqual(@as(usize, n), slice.len);
+}
+
+test "blocks" {
+    var y: i32 = 123;
+    const x = add_one: {
+        y += 1;
+        break :add_one y;
+    };
+    try std.testing.expectEqual(@as(i32, 124), x);
+    try std.testing.expectEqual(@as(i32, 124), y);
 }

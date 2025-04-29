@@ -2,6 +2,8 @@
 //! you are building an executable. If you are making a library, the convention
 //! is to delete this file and start with root.zig instead.
 
+const std = @import("std");
+
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
     std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
@@ -92,5 +94,3 @@ test "array replicate" {
     try std.testing.expectEqual(@as(u8, 2), b[3]);
     try std.testing.expectEqual(@as(u32, 4), b.len);
 }
-
-const std = @import("std");

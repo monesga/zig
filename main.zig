@@ -140,3 +140,19 @@ test "basic strings" {
         .{str[0..5]},
     );
 }
+
+test "string hex loop" {
+    const stdout = std.io.getStdErr().writer();
+    const str: []const u8 = "ABC";
+    try stdout.print("<<str: {s} hex: ", .{str});
+    for (str) |c| {
+        try stdout.print("{X} ", .{c});
+    }
+    try stdout.print(">>", .{});
+}
+
+test "string length" {
+    const str = "0123456789012345678901234567890123";
+    const len = str.len;
+    try std.testing.expectEqual(@as(u32, 34), len);
+}

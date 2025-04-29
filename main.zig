@@ -156,3 +156,17 @@ test "string length" {
     const len = str.len;
     try std.testing.expectEqual(@as(u32, 34), len);
 }
+
+test "@TypeOf" {
+    const arr = [_]u8{ 1, 2, 3, 4 };
+    try std.testing.expectEqual(@TypeOf(arr), [4]u8);
+
+    const str = "ABC";
+    try std.testing.expectEqual(@TypeOf(str), *const [3:0]u8);
+
+    const pa = &arr;
+    try std.testing.expectEqual(@TypeOf(pa), *const [4]u8);
+
+    const stdout = std.io.getStdErr().writer();
+    try stdout.print("<<arr:{}, str:{}, pa:{}>>", .{ @TypeOf(arr), @TypeOf(str), @TypeOf(pa) });
+}

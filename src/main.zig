@@ -40,6 +40,31 @@ test "fuzz example" {
     try std.testing.fuzz(Context{}, Context.testOne, .{});
 }
 
+test "var const" {
+    var a: i32 = 1;
+    const b: i32 = 2;
+    a = b;
+    // b = 30; // This will fail to compile, because `b` is a constant.
+}
+
+test "undefined" {
+    var a: i32 = undefined;
+
+    a = 1;
+}
+
+test "underscore" {
+    const a: i32 = 1_000_000;
+    _ = a;
+}
+
+test "var mutate" {
+    var a: i32 = 1;
+    a = 9; // if this line is removed we get a compile error
+    const b = a;
+    _ = b;
+}
+
 const std = @import("std");
 
 /// This imports the separate module containing `root.zig`. Take a look in `build.zig` for details.

@@ -170,3 +170,67 @@ test "@TypeOf" {
     const stdout = std.io.getStdErr().writer();
     try stdout.print("<<arr:{}, str:{}, pa:{}>>", .{ @TypeOf(arr), @TypeOf(str), @TypeOf(pa) });
 }
+
+test "UTF-8 raw codepoint" {
+    const str = "Ⱥ";
+    const c0 = str[0];
+    const c1 = str[1];
+    try std.testing.expectEqual(@as(u8, 0xC8), c0);
+    try std.testing.expectEqual(@as(u8, 0xBA), c1);
+    try std.testing.expectEqual(@as(usize, 2), str.len);
+}
+
+test "UTF-8 view" {
+    var utf8 = (try std.unicode.Utf8View.init("Ⱥ")).iterator();
+
+    const codepoint = utf8.nextCodepoint();
+    try std.testing.expectEqual(@as(u21, 570), codepoint);
+}
+
+test "string equality " {
+    const name: []const u8 = "Mohsen";
+    try std.testing.expectEqual(
+        true,
+        std.mem.eql(u8, name, "Mohsen"),
+    );
+}
+
+test "string concat" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const concat = try std.mem.concat(allocator, u8, &[_][]const u8{
+        "Hello, ",
+        "world!",
+    });
+    defer allocator.free(concat);
+    try std.testing.expectEqual(
+        true,
+        std.mem.eql(u8, concat, "Hello, world!"),
+    );
+}
+
+test "string startsWith" {
+    const str = "Hello, world!";
+    try std.testing.expectEqual(
+        true,
+        std.mem.startsWith(u8, str, "Hello"),
+    );
+    try std.testing.expectEqual(
+        false,
+        std.mem.startsWith(u8, str, "world"),
+    );
+}
+
+test "string replace" {
+    const str = "Hello";
+    var buffer: [5]u8 = undefined;
+    const nrep = std.mem.replace(u8, str, "el", "37", buffer[0..]);
+    try std.testing.expectEqual(
+        true,
+        std.mem.eql(u8, &buffer, "H37lo"),
+    );
+    try std.testing.expectEqual(
+        @as(u32, 1),
+        nrep,
+    );
+}

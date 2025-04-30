@@ -287,3 +287,29 @@ test "switch value" {
     };
     try std.testing.expectEqual(std.mem.eql(u8, desc, "three"), true);
 }
+
+test "switch ranges" {
+    const n: i32 = 65;
+    const desc = switch (n) {
+        1...10 => "one",
+        11...20 => "two",
+        21...30 => "three",
+        31...40 => "four",
+        41...50 => "five",
+        51...60 => "six",
+        else => "seven",
+    };
+    try std.testing.expectEqual(std.mem.eql(u8, desc, "seven"), true);
+}
+
+test "labeled switch" {
+    const v: i32 = 1;
+    var val: i32 = undefined;
+    cont: switch (v) {
+        1 => continue :cont 2,
+        2 => continue :cont 3,
+        3 => val = 4,
+        else => val = 5,
+    }
+    try std.testing.expectEqual(@as(u8, 4), val);
+}

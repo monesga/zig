@@ -342,3 +342,44 @@ test "for index and value" {
     }
     try std.testing.expectEqual(@as(usize, 16), sum);
 }
+
+test "while loop" {
+    var i: i32 = 0;
+    while (i < 10) {
+        i += 1;
+    }
+    try std.testing.expectEqual(@as(i32, 10), i);
+}
+
+test "while loop with increment expression" {
+    var i: i32 = 0;
+    var j: i32 = 0;
+    while (i < 10) : (i += 1) {
+        j += 1;
+    }
+    try std.testing.expectEqual(@as(i32, 10), i);
+    try std.testing.expectEqual(@as(i32, 10), j);
+}
+
+test "break" {
+    var i: i32 = 0;
+    while (true) {
+        i += 1;
+        if (i == 10) {
+            break;
+        }
+    }
+    try std.testing.expectEqual(@as(i32, 10), i);
+}
+
+test "continue" {
+    var i: i32 = 0;
+    var j: i32 = 0;
+    while (i < 10) : (i += 1) {
+        if (@mod(i, 2) == 0) {
+            continue;
+        }
+        j += i;
+    }
+    try std.testing.expectEqual(@as(i32, 1 + 3 + 5 + 7 + 9), j);
+}

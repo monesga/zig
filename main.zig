@@ -463,3 +463,16 @@ test "type casting with as" {
     try expectEqual(@as(u32, 65535), b);
     try expectEqual(@TypeOf(b), u32);
 }
+
+test "specialized type casting" {
+    const a: usize = 422;
+    const b: f32 = @floatFromInt(a);
+    try expectEqual(@as(f32, 422), b);
+    try expectEqual(@TypeOf(b), f32);
+}
+
+test "ptrCast" {
+    const bytes align(@alignOf(u32)) = [_]u8{ 1, 2, 3, 4 };
+    const u32_ptr: *const u32 = @ptrCast(&bytes);
+    try expectEqual(@TypeOf(u32_ptr), *const u32);
+}

@@ -232,3 +232,36 @@ test "string replace" {
         nrep,
     );
 }
+
+test "if statement" {
+    var a: i32 = undefined;
+    const t = true;
+
+    if (t) {
+        a = 1;
+    } else {
+        a = 2;
+    }
+    try std.testing.expectEqual(@as(i32, 1), a);
+}
+
+test "switch statement" {
+    const Kind = enum { Mammal, Bird, Fish };
+    var desc: []const u8 = undefined;
+    const kind = Kind.Mammal;
+
+    switch (kind) {
+        Kind.Mammal => {
+            desc = "Mammal";
+        },
+        Kind.Bird => {
+            desc = "Bird";
+        },
+        Kind.Fish => {
+            desc = "Fish";
+        },
+    }
+
+    try std.testing.expectEqual(@as(u32, 6), desc.len);
+    try std.testing.expectEqual(true, std.mem.eql(u8, desc, "Mammal"));
+}

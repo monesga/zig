@@ -410,3 +410,30 @@ test "struct basics" {
     try std.testing.expectEqual(@as(i32, 3), p2.x);
     try std.testing.expectEqual(@as(i32, 4), p2.y);
 }
+
+const Vec3 = struct {
+    x: f64,
+    y: f64,
+    z: f64,
+
+    fn d2(a: f64, b: f64) f64 {
+        const m = std.math;
+        return m.pow(f64, a - b, 2);
+    }
+
+    pub fn distance(self: Vec3, other: Vec3) f64 {
+        const m = std.math;
+        return m.sqrt(
+            d2(self.x, other.x) +
+                d2(self.y, other.y) +
+                d2(self.z, other.z),
+        );
+    }
+};
+
+test "self" {
+    const p1 = Vec3{ .x = 1, .y = 2, .z = 3 };
+    const p2 = Vec3{ .x = 4, .y = 5, .z = 6 };
+    const d = p1.distance(p2);
+    try std.testing.expectEqual(@as(f64, 5.196152422706632), d);
+}

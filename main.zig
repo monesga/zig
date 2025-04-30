@@ -313,3 +313,14 @@ test "labeled switch" {
     }
     try std.testing.expectEqual(@as(u8, 4), val);
 }
+
+test "defer" {
+    var a: i32 = 0;
+
+    if (true) {
+        defer a += 1;
+        defer a *= 3; // Last in first out
+        a += 1;
+    }
+    try std.testing.expectEqual(@as(i32, 4), a);
+}

@@ -448,3 +448,9 @@ test "self" {
     try std.testing.expectEqual(@as(f64, 4), p3.y);
     try std.testing.expectEqual(@as(f64, 6), p3.z);
 }
+
+test "type inference with dot" {
+    const Fruit = enum { Apple, Orange, Banana };
+    const fruit: Fruit = .Apple;
+    try std.testing.expectEqual(.Apple, fruit);
+}

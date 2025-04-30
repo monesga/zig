@@ -265,3 +265,15 @@ test "switch statement" {
     try std.testing.expectEqual(@as(u32, 6), desc.len);
     try std.testing.expectEqual(true, std.mem.eql(u8, desc, "Mammal"));
 }
+
+test "switch else" {
+    const n: i32 = 7;
+    var y: i32 = undefined;
+
+    switch (n) {
+        1, 2, 3 => y = 1,
+        4, 5, 6 => y = 2,
+        else => y = 3,
+    }
+    try std.testing.expectEqual(@as(i32, 3), y);
+}

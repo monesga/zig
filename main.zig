@@ -393,3 +393,20 @@ test "reference and dereference" {
     add2(&a);
     try std.testing.expectEqual(@as(i32, 3), a);
 }
+
+const Point = struct {
+    x: i32,
+    y: i32,
+
+    pub fn init(x: i32, y: i32) Point {
+        return Point{ .x = x, .y = y };
+    }
+};
+test "struct basics" {
+    const p1 = Point{ .x = 1, .y = 2 };
+    try std.testing.expectEqual(@as(i32, 1), p1.x);
+    try std.testing.expectEqual(@as(i32, 2), p1.y);
+    const p2 = Point.init(3, 4);
+    try std.testing.expectEqual(@as(i32, 3), p2.x);
+    try std.testing.expectEqual(@as(i32, 4), p2.y);
+}

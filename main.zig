@@ -383,3 +383,13 @@ test "continue" {
     }
     try std.testing.expectEqual(@as(i32, 1 + 3 + 5 + 7 + 9), j);
 }
+
+fn add2(x: *i32) void {
+    x.* += 2;
+}
+
+test "reference and dereference" {
+    var a: i32 = 1;
+    add2(&a);
+    try std.testing.expectEqual(@as(i32, 3), a);
+}

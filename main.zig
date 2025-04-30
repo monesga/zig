@@ -324,3 +324,21 @@ test "defer" {
     }
     try std.testing.expectEqual(@as(i32, 4), a);
 }
+
+test "for loop" {
+    const arr = [_]u8{ 1, 2, 3, 4 };
+    var sum: i32 = 0;
+    for (arr) |i| {
+        sum += i;
+    }
+    try std.testing.expectEqual(@as(i32, 10), sum);
+}
+
+test "for index and value" {
+    const arr = [_]u8{ 1, 2, 3, 4 };
+    var sum: usize = 0;
+    for (arr, 0..) |i, j| {
+        sum += i + j;
+    }
+    try std.testing.expectEqual(@as(usize, 16), sum);
+}

@@ -429,6 +429,12 @@ const Vec3 = struct {
                 d2(self.z, other.z),
         );
     }
+
+    pub fn double(self: *Vec3) void {
+        self.x *= 2;
+        self.y *= 2;
+        self.z *= 2;
+    }
 };
 
 test "self" {
@@ -436,4 +442,9 @@ test "self" {
     const p2 = Vec3{ .x = 4, .y = 5, .z = 6 };
     const d = p1.distance(p2);
     try std.testing.expectEqual(@as(f64, 5.196152422706632), d);
+    var p3 = Vec3{ .x = 1, .y = 2, .z = 3 };
+    p3.double();
+    try std.testing.expectEqual(@as(f64, 2), p3.x);
+    try std.testing.expectEqual(@as(f64, 4), p3.y);
+    try std.testing.expectEqual(@as(f64, 6), p3.z);
 }

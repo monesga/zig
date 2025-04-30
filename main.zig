@@ -277,3 +277,13 @@ test "switch else" {
     }
     try std.testing.expectEqual(@as(i32, 3), y);
 }
+
+test "switch value" {
+    const n: i32 = 7;
+    const desc = switch (n) {
+        1, 2, 3 => "one",
+        4, 5, 6 => "two",
+        else => "three",
+    };
+    try std.testing.expectEqual(std.mem.eql(u8, desc, "three"), true);
+}

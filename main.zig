@@ -586,6 +586,21 @@ const Base64 = struct {
     pub fn _char_at(self: Base64, index: u8) u8 {
         return self._table[index];
     }
+
+    fn _calc_encode_length(input: []const u8) !usize {
+        if (input.len < 3) {
+            return 4;
+        }
+
+        return try std.math.divCeil(usize, input.len, 3) * 4;
+    }
+
+    fn _calc_decode_length(input: []const u8) !usize {
+        if (input.len < 4) {
+            return 3;
+        }
+        return try std.math.divFloor(usize, input.len, 4) * 3;
+    }
 };
 
 test "Base64 init" {

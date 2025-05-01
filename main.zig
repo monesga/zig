@@ -572,3 +572,24 @@ test "struct create destroy" {
     try expectEqual(std.mem.eql(u8, user.name, "Mohsen"), true);
     try expectEqual(@as(u32, 30), user.age);
 }
+
+const Base64 = struct {
+    _table: *const [64]u8,
+
+    pub fn init() Base64 {
+        const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const lower = "abcdefghijklmnopqrstuvwxyz";
+        const digits = "0123456789+/";
+        return Base64{ ._table = upper ++ lower ++ digits };
+    }
+
+    pub fn _char_at(self: Base64, index: u8) u8 {
+        return self._table[index];
+    }
+};
+
+test "Base64 init" {
+    const base64 = Base64.init();
+    const c = base64._char_at(0);
+    try expectEqual(@as(u8, 'A'), c);
+}

@@ -476,3 +476,11 @@ test "ptrCast" {
     const u32_ptr: *const u32 = @ptrCast(&bytes);
     try expectEqual(@TypeOf(u32_ptr), *const u32);
 }
+
+test "allocPrint" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const str = try std.fmt.allocPrint(allocator, "Hello {s}", .{"World"});
+    defer allocator.free(str);
+    try expectEqual(std.mem.eql(u8, str, "Hello World"), true);
+}

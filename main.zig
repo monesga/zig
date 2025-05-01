@@ -601,9 +601,70 @@ const Base64 = struct {
         }
         return try std.math.divFloor(usize, input.len, 4) * 3;
     }
+
+    pub fn encode(self: Base64, allocator: std.mem.Allocator, input: []const u8) ![]u8 {
+        if (input.len == 0) {
+            return allocator.alloc(u8, 0);
+        }
+
+        const n_out = try _calc_encode_length(input);
+        var out = try allocator.alloc(u8, n_out);
+        var buf = [3]u8{ 0, 0, 0 };
+        var count: u8 = 0;
+        var iout: u64 = 0;
+
+        for (input, 0..) |_, i| {
+            buf[count] = input[i];
+            count += 1;
+            if (count == 3) {
+                out[iout] = self._char_at(buf[0] >> 2);
+                out[iout + 1] = self._char_at(((buf[0] & 0x03) << 4) | (buf[1] >> 4));
+                out[iout + 2] = self._char_at(((buf[1] & 0x0F) << 2) | (buf[2] >> 6));
+                out[iout + 3] = self._char_at(buf[2] & 0x3F);
+                iout += 4;
+                count = 0;
+            }
+        }
+
+        if (count == 1) {
+            out[iout] = self._char_at(buf[0] >> 2);
+            out[iout + 1] = self._char_at((buf[0] & 0x03) << 4);
+            out[iout + 2] = '=';
+            out[iout + 3] = '=';
+        } else if (count == 2) {
+            out[iout] = self._char_at(buf[0] >> 2);
+            out[iout + 1] = self._char_at(((buf[0] & 0x03) << 4) | (buf[1] >> 4));
+            out[iout + 2] = self._char_at((buf[1] & 0x0F) << 2);
+            out[iout + 3] = '=';
+        }
+
+        return out;
+    }
 };
 
 test "Base64 init" {
     const base64 = Base64.init();
     try expectEqual(@as(u8, 'c'), base64._char_at(28));
+}
+
+test "Base64 encode" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const base64 = Base64.init();
+    const inp1 = "Hello, world!";
+    const enc1 = try base64.encode(allocator, inp1);
+    defer allocator.free(enc1);
+    try expectEqual(std.mem.eql(u8, enc1, "SGVsbG8sIHdvcmxkIQ=="), true);
+    const inp2 = "Hi";
+    const enc2 = try base64.encode(allocator, inp2);
+    defer allocator.free(enc2);
+    try expectEqual(std.mem.eql(u8, enc2, "SGk="), true);
+    const inp3 = "A";
+    const enc3 = try base64.encode(allocator, inp3);
+    defer allocator.free(enc3);
+    try expectEqual(std.mem.eql(u8, enc3, "QQ=="), true);
+    const inp4 = "";
+    const enc4 = try base64.encode(allocator, inp4);
+    defer allocator.free(enc4);
+    try expectEqual(std.mem.eql(u8, enc4, ""), true);
 }

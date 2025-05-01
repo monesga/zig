@@ -19,6 +19,8 @@ pub fn main() !void {
     const stdout = bw.writer();
     try stdout.print("stdout: initialized.\n", .{});
     try bw.flush(); // Don't forget to flush!
+
+    // try test_stdin();
 }
 
 test "var const" {
@@ -524,4 +526,41 @@ test "ArenaAllocator" {
     _ = try in1;
     _ = try in2;
     _ = try in3;
+}
+
+test "alloc free" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const num = try allocator.alloc(u8, 5);
+    defer allocator.free(num);
+    for (0..5) |i| {
+        num[i] = @intCast(i);
+    }
+    try expectEqual(@as(u8, 0), num[0]);
+    try expectEqual(@as(u8, 1), num[1]);
+    try expectEqual(@as(u8, 2), num[2]);
+    try expectEqual(@as(u8, 3), num[3]);
+    try expectEqual(@as(u8, 4), num[4]);
+}
+
+fn test_stdin() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+
+    const stdin = std.io.getStdIn().reader();
+    const stdout = std.io.getStdOut().writer();
+
+    const buffer_opt = try stdin.readUntilDelimiterOrEofAlloc(allocator, '\n', 100);
+    if (buffer_opt) |buffer| {
+        defer allocator.free(buffer);
+        try stdout.print("<<stdin: {s}>>\n", .{buffer});
+    } else {
+        try stdout.print("<<stdin: EOF>>\n", .{});
+    }
+}
+
+test "stdin" {
+    const skip = true;
+    if (skip) return;
+    try test_stdin();
 }

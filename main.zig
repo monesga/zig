@@ -512,3 +512,16 @@ test "BufferAllocator" {
     try expectEqual(@as(u8, 3), num[3]);
     try expectEqual(@as(u8, 4), num[4]);
 }
+
+test "ArenaAllocator" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var aa = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer aa.deinit(); // this will free all allocations in the arena
+    const allocator = aa.allocator();
+    const in1 = allocator.alloc(u8, 5);
+    const in2 = allocator.alloc(u8, 10);
+    const in3 = allocator.alloc(u8, 15);
+    _ = try in1;
+    _ = try in2;
+    _ = try in3;
+}

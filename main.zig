@@ -6,6 +6,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
+const log = std.io.getStdErr().writer();
 
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
@@ -640,6 +641,52 @@ const Base64 = struct {
 
         return out;
     }
+
+    fn _char_index(c: u8) u8 {
+        if (c >= 'A' and c <= 'Z') {
+            return c - 'A';
+        } else if (c >= 'a' and c <= 'z') {
+            return c - 'a' + 26;
+        } else if (c >= '0' and c <= '9') {
+            return c - '0' + 52;
+        } else if (c == '+') {
+            return 62;
+        } else if (c == '/') {
+            return 63;
+        }
+        return 64; // Invalid character
+    }
+
+    pub fn decode(self: Base64, allocator: std.mem.Allocator, input: []const u8) ![]u8 {
+        _ = self;
+        if (input.len == 0) {
+            return allocator.alloc(u8, 0);
+        }
+
+        const n_out = try _calc_decode_length(input);
+        var out = try allocator.alloc(u8, n_out);
+        var buf = [4]u8{ 0, 0, 0, 0 };
+        var count: u8 = 0;
+        var iout: u64 = 0;
+
+        for (0..input.len) |i| {
+            buf[count] = _char_index(input[i]);
+            count += 1;
+            if (count == 4) {
+                out[iout] = (buf[0] << 2) | (buf[1] >> 4);
+                if (buf[2] != 64) {
+                    out[iout + 1] = ((buf[1] & 0x0F) << 4) | (buf[2] >> 2);
+                }
+                if (buf[3] != 64) {
+                    out[iout + 2] = ((buf[2] & 0x03) << 6) | buf[3];
+                }
+                iout += 3;
+                count = 0;
+            }
+        }
+
+        return out;
+    }
 };
 
 test "Base64 init" {
@@ -667,4 +714,27 @@ test "Base64 encode" {
     const enc4 = try base64.encode(allocator, inp4);
     defer allocator.free(enc4);
     try expectEqual(std.mem.eql(u8, enc4, ""), true);
+}
+
+test "Base64 decode" {
+    var mem: [1000]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&mem);
+    const allocator = fba.allocator();
+    const base64 = Base64.init();
+
+    const inp4 = "";
+    const dec4 = try base64.decode(allocator, inp4);
+    try expectEqual(std.mem.eql(u8, dec4, ""), true);
+
+    const inp3 = "QQ==";
+    const dec3 = try base64.decode(allocator, inp3);
+    try expectEqual(std.mem.startsWith(u8, dec3, "A"), true);
+
+    const inp2 = "SGk=";
+    const dec2 = try base64.decode(allocator, inp2);
+    try expectEqual(std.mem.startsWith(u8, dec2, "Hi"), true);
+
+    const inp1 = "SGVsbG8sIHdvcmxkIQ==";
+    const dec1 = try base64.decode(allocator, inp1);
+    try expectEqual(std.mem.startsWith(u8, dec1, "Hello, world!"), true);
 }

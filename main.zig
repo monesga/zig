@@ -590,6 +590,5 @@ const Base64 = struct {
 
 test "Base64 init" {
     const base64 = Base64.init();
-    const c = base64._char_at(0);
-    try expectEqual(@as(u8, 'A'), c);
+    try expectEqual(@as(u8, 'c'), base64._char_at(28));
 }

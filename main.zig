@@ -6,7 +6,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
-const log = std.io.getStdErr().writer();
 
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)

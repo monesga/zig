@@ -559,8 +559,16 @@ fn test_stdin() !void {
     }
 }
 
-test "stdin" {
-    const skip = true;
-    if (skip) return;
-    try test_stdin();
+test "struct create destroy" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const User = struct {
+        name: []const u8,
+        age: u32,
+    };
+    const user = try allocator.create(User);
+    defer allocator.destroy(user);
+    user.* = User{ .name = "Mohsen", .age = 30 };
+    try expectEqual(std.mem.eql(u8, user.name, "Mohsen"), true);
+    try expectEqual(@as(u32, 30), user.age);
 }

@@ -656,7 +656,6 @@ const Base64 = struct {
         return 64; // Invalid character
     }
 
-    // TODO: Handle padding properly and trim return array
     pub fn decode(self: Base64, allocator: std.mem.Allocator, input: []const u8) ![]u8 {
         _ = self;
         if (input.len == 0) {
@@ -676,9 +675,13 @@ const Base64 = struct {
                 out[iout] = (buf[0] << 2) | (buf[1] >> 4);
                 if (buf[2] != 64) {
                     out[iout + 1] = ((buf[1] & 0x0F) << 4) | (buf[2] >> 2);
+                } else {
+                    out[iout + 1] = 0;
                 }
                 if (buf[3] != 64) {
                     out[iout + 2] = ((buf[2] & 0x03) << 6) | buf[3];
+                } else {
+                    out[iout + 2] = 0;
                 }
                 iout += 3;
                 count = 0;
@@ -728,13 +731,13 @@ test "Base64 decode" {
 
     const inp3 = "QQ==";
     const dec3 = try base64.decode(allocator, inp3);
-    try expectEqual(std.mem.startsWith(u8, dec3, "A"), true);
+    try expectEqual(std.mem.eql(u8, dec3, &.{ 'A', 0, 0 }), true);
 
     const inp2 = "SGk=";
     const dec2 = try base64.decode(allocator, inp2);
-    try expectEqual(std.mem.startsWith(u8, dec2, "Hi"), true);
+    try expectEqual(std.mem.eql(u8, dec2, &.{ 'H', 'i', 0 }), true);
 
     const inp1 = "SGVsbG8sIHdvcmxkIQ==";
     const dec1 = try base64.decode(allocator, inp1);
-    try expectEqual(std.mem.startsWith(u8, dec1, "Hello, world!"), true);
+    try expectEqual(std.mem.eql(u8, dec1, &.{ 'H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!', 0, 0 }), true);
 }

@@ -484,3 +484,31 @@ test "allocPrint" {
     defer allocator.free(str);
     try expectEqual(std.mem.eql(u8, str, "Hello World"), true);
 }
+
+test "GeneralPurposeAllocator create, destroy" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const num = try allocator.create(u8);
+    defer allocator.destroy(num);
+    num.* = 10;
+    try expectEqual(@as(u32, 10), num.*);
+}
+
+test "BufferAllocator" {
+    var buffer: [10]u8 = undefined;
+    for (0..buffer.len) |i| {
+        buffer[i] = 0;
+    }
+    var fba = std.heap.FixedBufferAllocator.init(&buffer);
+    const allocator = fba.allocator();
+    const num = try allocator.alloc(u8, 5);
+    defer allocator.free(num);
+    for (0..5) |i| {
+        num[i] = @intCast(i);
+    }
+    try expectEqual(@as(u8, 0), num[0]);
+    try expectEqual(@as(u8, 1), num[1]);
+    try expectEqual(@as(u8, 2), num[2]);
+    try expectEqual(@as(u8, 3), num[3]);
+    try expectEqual(@as(u8, 4), num[4]);
+}

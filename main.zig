@@ -656,6 +656,7 @@ const Base64 = struct {
         return 64; // Invalid character
     }
 
+    // TODO: Handle padding properly and trim return array
     pub fn decode(self: Base64, allocator: std.mem.Allocator, input: []const u8) ![]u8 {
         _ = self;
         if (input.len == 0) {

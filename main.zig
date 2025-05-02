@@ -741,3 +741,53 @@ test "Base64 decode" {
     const dec1 = try base64.decode(allocator, inp1);
     try expectEqual(std.mem.eql(u8, dec1, &.{ 'H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!', 0, 0 }), true);
 }
+
+test "pointer" {
+    const a: i32 = 1;
+    const b = &a;
+    try expectEqual(@as(i32, 1), b.*);
+    try expectEqual(@TypeOf(b), *const i32);
+}
+
+test "pointer dereference chaining" {
+    const User = struct {
+        name: []const u8,
+        age: u32,
+    };
+
+    const u = User{ .name = "Mohsen", .age = 30 };
+    const p = &u;
+    try expectEqual(30, p.*.age);
+}
+
+test "const pointer to var" {
+    var a: i32 = 1;
+    const b = &a;
+    b.* = 2; // This is allowed because `b` is a pointer to a variable.
+    try expectEqual(@as(i32, 2), a);
+}
+
+test "var pointer to different const" {
+    const a: i32 = 1;
+    const b: i32 = 2;
+    var p = &a;
+    try expectEqual(@as(i32, 1), p.*);
+    p = &b;
+    try expectEqual(@as(i32, 2), p.*);
+}
+
+test "pointer arithmetic" {
+    var arr = [_]u8{ 1, 2, 3, 4 };
+    var p: [*]const u8 = &arr;
+    const el1 = p[0];
+    p = p + 1;
+    const el2 = p[0];
+    p = p + 1;
+    const el3 = p[0];
+    p = p + 1;
+    const el4 = p[0];
+    try expectEqual(@as(u8, 1), el1);
+    try expectEqual(@as(u8, 2), el2);
+    try expectEqual(@as(u8, 3), el3);
+    try expectEqual(@as(u8, 4), el4);
+}

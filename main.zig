@@ -21,6 +21,12 @@ pub fn main() !void {
     try bw.flush(); // Don't forget to flush!
 
     // try test_stdin();
+
+    const socket = try Socket.init();
+    std.debug.print("Socket initialized {any}.\n", .{socket._address});
+    var server = try socket._address.listen(.{});
+    const connection = try server.accept();
+    _ = connection;
 }
 
 test "var const" {
@@ -817,3 +823,17 @@ test "orelse" {
     const b: i32 = (a orelse 3) * 2;
     try expectEqual(@as(i32, 6), b);
 }
+
+const Socket = struct {
+    _address: std.net.Address,
+    _stream: std.net.Stream,
+
+    pub fn init() !Socket {
+        const host = [4]u8{ 127, 0, 0, 1 };
+        const port = 8080;
+        const addr = std.net.Address.initIp4(host, port);
+        const sock_fd: i32 = try std.posix.socket(addr.any.family, std.posix.SOCK.STREAM, std.posix.IPPROTO.TCP);
+        const stream = std.net.Stream{ .handle = sock_fd };
+        return Socket{ ._address = addr, ._stream = stream };
+    }
+};

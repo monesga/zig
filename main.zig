@@ -920,3 +920,15 @@ test "expectError" {
     const allocator = fba.allocator();
     try std.testing.expectError(error.OutOfMemory, alloc_100(allocator));
 }
+
+test "expectEqualSlices" {
+    const a = [_]u8{ 1, 2, 3, 4 };
+    const b = [_]u8{ 1, 2, 3, 4 };
+    try std.testing.expectEqualSlices(u8, &a, &b);
+}
+
+test "expectEqualStrings" {
+    const a = "Hello, world!";
+    const b = "Hello, world!";
+    try std.testing.expectEqualStrings(a, b);
+}

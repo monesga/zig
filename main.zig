@@ -791,3 +791,29 @@ test "pointer arithmetic" {
     try expectEqual(@as(u8, 3), el3);
     try expectEqual(@as(u8, 4), el4);
 }
+
+test "optional" {
+    var a: ?i32 = 0;
+    a = null;
+}
+
+test "optional pointer" {
+    var a: i32 = 1;
+    var p: ?*i32 = &a;
+    p = null;
+}
+
+test "unwrap optional with if" {
+    const a: ?i32 = 1;
+    if (a) |v| {
+        try expectEqual(@as(i32, 1), v);
+    } else {
+        unreachable;
+    }
+}
+
+test "orelse" {
+    const a: ?i32 = null;
+    const b: i32 = (a orelse 3) * 2;
+    try expectEqual(@as(i32, 6), b);
+}

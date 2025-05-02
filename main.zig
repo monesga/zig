@@ -22,23 +22,8 @@ pub fn main() !void {
 
     // try test_stdin();
 
-    const socket = try Socket.init();
-    std.debug.print("Socket initialized {any}.\n", .{socket._address});
-    var server = try socket._address.listen(.{});
-    const connection = try server.accept();
-    var buffer: [1024]u8 = undefined;
-    for (0..buffer.len) |i| {
-        buffer[i] = 0;
-    }
-    _ = try read_request(connection, buffer[0..buffer.len]);
-    const request = try parse_request(buffer[0..]);
-    if (request.method == .GET) {
-        if (std.mem.eql(u8, request.uri, "/")) {
-            try send_200(connection);
-        } else {
-            try send_404(connection);
-        }
-    }
+    const server = HttpServer{};
+    try server.start();
 }
 
 test "var const" {
@@ -836,67 +821,86 @@ test "orelse" {
     try expectEqual(@as(i32, 6), b);
 }
 
-const Socket = struct {
-    _address: std.net.Address,
-    _stream: std.net.Stream,
+const HttpServer = struct {
+    const Socket = struct {
+        _address: std.net.Address,
+        _stream: std.net.Stream,
 
-    pub fn init() !Socket {
-        const host = [4]u8{ 127, 0, 0, 1 };
-        const port = 8080;
-        const addr = std.net.Address.initIp4(host, port);
-        const sock_fd: i32 = try std.posix.socket(addr.any.family, std.posix.SOCK.STREAM, std.posix.IPPROTO.TCP);
-        const stream = std.net.Stream{ .handle = sock_fd };
-        return Socket{ ._address = addr, ._stream = stream };
+        pub fn init() !Socket {
+            const host = [4]u8{ 127, 0, 0, 1 };
+            const port = 8080;
+            const addr = std.net.Address.initIp4(host, port);
+            const sock_fd: i32 = try std.posix.socket(addr.any.family, std.posix.SOCK.STREAM, std.posix.IPPROTO.TCP);
+            const stream = std.net.Stream{ .handle = sock_fd };
+            return Socket{ ._address = addr, ._stream = stream };
+        }
+    };
+
+    const Connection = std.net.Server.Connection;
+    pub fn read_request(conn: Connection, buffer: []u8) !void {
+        const reader = conn.stream.reader();
+        _ = try reader.read(buffer);
+    }
+
+    const Method = enum {
+        GET,
+
+        pub fn init(text: []const u8) !Method {
+            return MethodMap.get(text).?;
+        }
+
+        pub fn is_supported(m: []const u8) bool {
+            return MethodMap.contains(m);
+        }
+    };
+
+    const Map = std.static_string_map.StaticStringMap;
+    const MethodMap = Map(Method).initComptime(.{.{ "GET", .GET }});
+    const Request = struct {
+        method: Method,
+        version: []const u8,
+        uri: []const u8,
+        pub fn init(method: Method, uri: []const u8, version: []const u8) Request {
+            return Request{ .method = method, .uri = uri, .version = version };
+        }
+    };
+    fn parse_request(text: []u8) !Request {
+        const line_index = std.mem.indexOfScalar(u8, text, '\n') orelse text.len;
+        var iterator = std.mem.splitScalar(u8, text[0..line_index], ' ');
+        const method_str = iterator.next();
+        const method = try Method.init(method_str.?);
+        const uri = iterator.next().?;
+        const version = iterator.next().?;
+        const request = Request.init(method, uri, version);
+        return request;
+    }
+    fn send_200(conn: Connection) !void {
+        const response = ("HTTP/1.1 200 OK\nContent-Length: 48" ++ "\nContent-Type: text/html\n" ++ "Connection: Closed\n\n" ++ "<html><body><h1>Hello, World!</h1></body></html>");
+        _ = try conn.stream.write(response);
+    }
+
+    fn send_404(conn: Connection) !void {
+        const response = ("HTTP/1.1 404 Not Found\nContent-Length: 50" ++ "\nContent-Type: text/html\n" ++ "Connection: Closed\n\n");
+        _ = try conn.stream.write(response);
+    }
+    pub fn start(self: HttpServer) !void {
+        _ = self;
+        const socket = try Socket.init();
+        std.debug.print("Socket initialized {any}.\n", .{socket._address});
+        var server = try socket._address.listen(.{});
+        const connection = try server.accept();
+        var buffer: [1024]u8 = undefined;
+        for (0..buffer.len) |i| {
+            buffer[i] = 0;
+        }
+        _ = try read_request(connection, buffer[0..buffer.len]);
+        const request = try parse_request(buffer[0..]);
+        if (request.method == .GET) {
+            if (std.mem.eql(u8, request.uri, "/")) {
+                try send_200(connection);
+            } else {
+                try send_404(connection);
+            }
+        }
     }
 };
-
-const Connection = std.net.Server.Connection;
-pub fn read_request(conn: Connection, buffer: []u8) !void {
-    const reader = conn.stream.reader();
-    _ = try reader.read(buffer);
-}
-
-const Method = enum {
-    GET,
-
-    pub fn init(text: []const u8) !Method {
-        return MethodMap.get(text).?;
-    }
-
-    pub fn is_supported(m: []const u8) bool {
-        return MethodMap.contains(m);
-    }
-};
-
-const Map = std.static_string_map.StaticStringMap;
-const MethodMap = Map(Method).initComptime(.{.{ "GET", .GET }});
-
-const Request = struct {
-    method: Method,
-    version: []const u8,
-    uri: []const u8,
-    pub fn init(method: Method, uri: []const u8, version: []const u8) Request {
-        return Request{ .method = method, .uri = uri, .version = version };
-    }
-};
-
-fn parse_request(text: []u8) !Request {
-    const line_index = std.mem.indexOfScalar(u8, text, '\n') orelse text.len;
-    var iterator = std.mem.splitScalar(u8, text[0..line_index], ' ');
-    const method_str = iterator.next();
-    const method = try Method.init(method_str.?);
-    const uri = iterator.next().?;
-    const version = iterator.next().?;
-    const request = Request.init(method, uri, version);
-    return request;
-}
-
-fn send_200(conn: Connection) !void {
-    const response = ("HTTP/1.1 200 OK\nContent-Length: 48" ++ "\nContent-Type: text/html\n" ++ "Connection: Closed\n\n" ++ "<html><body><h1>Hello, World!</h1></body></html>");
-    _ = try conn.stream.write(response);
-}
-
-fn send_404(conn: Connection) !void {
-    const response = ("HTTP/1.1 404 Not Found\nContent-Length: 50" ++ "\nContent-Type: text/html\n" ++ "Connection: Closed\n\n");
-    _ = try conn.stream.write(response);
-}

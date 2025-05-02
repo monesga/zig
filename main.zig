@@ -904,3 +904,19 @@ const HttpServer = struct {
         }
     }
 };
+
+fn alloc_100(allocator: std.mem.Allocator) ![]u8 {
+    const buffer = try allocator.alloc(u8, 100);
+    defer allocator.free(buffer);
+    for (0..buffer.len) |i| {
+        buffer[i] = @intCast(i);
+    }
+    return buffer;
+}
+
+test "expectError" {
+    var buffer: [10]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&buffer);
+    const allocator = fba.allocator();
+    try std.testing.expectError(error.OutOfMemory, alloc_100(allocator));
+}

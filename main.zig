@@ -32,7 +32,13 @@ pub fn main() !void {
     }
     _ = try read_request(connection, buffer[0..buffer.len]);
     const request = try parse_request(buffer[0..]);
-    std.debug.print("Request: {any}\n", .{request});
+    if (request.method == .GET) {
+        if (std.mem.eql(u8, request.uri, "/")) {
+            try send_200(connection);
+        } else {
+            try send_404(connection);
+        }
+    }
 }
 
 test "var const" {
@@ -874,7 +880,7 @@ const Request = struct {
     }
 };
 
-pub fn parse_request(text: []u8) !Request {
+fn parse_request(text: []u8) !Request {
     const line_index = std.mem.indexOfScalar(u8, text, '\n') orelse text.len;
     var iterator = std.mem.splitScalar(u8, text[0..line_index], ' ');
     const method_str = iterator.next();
@@ -883,4 +889,14 @@ pub fn parse_request(text: []u8) !Request {
     const version = iterator.next().?;
     const request = Request.init(method, uri, version);
     return request;
+}
+
+fn send_200(conn: Connection) !void {
+    const response = ("HTTP/1.1 200 OK\nContent-Length: 48" ++ "\nContent-Type: text/html\n" ++ "Connection: Closed\n\n" ++ "<html><body><h1>Hello, World!</h1></body></html>");
+    _ = try conn.stream.write(response);
+}
+
+fn send_404(conn: Connection) !void {
+    const response = ("HTTP/1.1 404 Not Found\nContent-Length: 50" ++ "\nContent-Type: text/html\n" ++ "Connection: Closed\n\n");
+    _ = try conn.stream.write(response);
 }

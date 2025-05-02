@@ -26,7 +26,12 @@ pub fn main() !void {
     std.debug.print("Socket initialized {any}.\n", .{socket._address});
     var server = try socket._address.listen(.{});
     const connection = try server.accept();
-    _ = connection;
+    var buffer: [1024]u8 = undefined;
+    for (0..buffer.len) |i| {
+        buffer[i] = 0;
+    }
+    _ = try read_request(connection, buffer[0..buffer.len]);
+    std.debug.print("Buffer: {s}\n", .{buffer});
 }
 
 test "var const" {
@@ -837,3 +842,9 @@ const Socket = struct {
         return Socket{ ._address = addr, ._stream = stream };
     }
 };
+
+const Connection = std.net.Server.Connection;
+pub fn read_request(conn: Connection, buffer: []u8) !void {
+    const reader = conn.stream.reader();
+    _ = try reader.read(buffer);
+}

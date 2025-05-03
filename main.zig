@@ -932,3 +932,36 @@ test "expectEqualStrings" {
     const b = "Hello, world!";
     try std.testing.expectEqualStrings(a, b);
 }
+
+test "basic error checking" {
+    const dir = std.fs.cwd();
+    // _ = dir.openFile("main.zig", .{}); // this will not compile
+    _ = try dir.openFile("main.zig", .{}); // this will compile
+}
+
+const TestError = error{
+    Unexcpected,
+    OutOfMemory,
+};
+
+fn test_error() TestError!void {
+    return TestError.Unexcpected;
+}
+
+test "error enum" {
+    const err = test_error();
+    try std.testing.expectEqual(err, TestError.Unexcpected);
+}
+
+const TestSubError = error{
+    OutOfMemory,
+};
+
+fn test_sub_error() TestSubError!void {
+    return TestSubError.OutOfMemory;
+}
+
+test "casting suberrors" {
+    const err = test_sub_error();
+    try std.testing.expectEqual(err, TestError.OutOfMemory);
+}

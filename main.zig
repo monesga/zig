@@ -1010,3 +1010,24 @@ test "errdefer" {
     };
     try expectEqual(@as(i32, 0), val);
 }
+
+test "tagged union" {
+    const JsVar = union(enum) {
+        nVal: f64,
+        sVal: []const u8,
+        bVal: bool,
+    };
+
+    var jsVar = JsVar{ .nVal = 1.0 };
+    try expectEqual(@as(f64, 1.0), jsVar.nVal);
+    jsVar = JsVar{ .sVal = "Hello" };
+    try std.testing.expectEqualStrings("Hello", jsVar.sVal);
+
+    var stringFound: ?[]const u8 = null;
+    switch (jsVar) {
+        .nVal => stringFound = null,
+        .sVal => stringFound = jsVar.sVal,
+        .bVal => stringFound = null,
+    }
+    try std.testing.expectEqualStrings("Hello", stringFound.?);
+}

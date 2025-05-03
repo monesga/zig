@@ -965,3 +965,22 @@ test "casting suberrors" {
     const err = test_sub_error();
     try std.testing.expectEqual(err, TestError.OutOfMemory);
 }
+
+fn conditional_error(a: i32) TestError!i32 {
+    if (a == 0) {
+        return TestError.Unexcpected;
+    }
+    return 27;
+}
+test "catch error" {
+    const e = conditional_error(0) catch 20;
+    try expectEqual(@as(i32, 20), e);
+}
+
+test "catch to default error values" {
+    // parse a string into an integer
+    const n1 = std.fmt.parseInt(i32, "1234", 10) catch 0;
+    try expectEqual(@as(i32, 1234), n1);
+    const n2 = std.fmt.parseInt(i32, "abc", 10) catch -1;
+    try expectEqual(@as(i32, -1), n2);
+}

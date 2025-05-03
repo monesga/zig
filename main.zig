@@ -22,8 +22,8 @@ pub fn main() !void {
 
     // try test_stdin();
 
-    const server = HttpServer{};
-    try server.start();
+    // const server = HttpServer{};
+    // try server.start();
 }
 
 test "var const" {

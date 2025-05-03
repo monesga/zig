@@ -995,3 +995,18 @@ test "using if to catch errors" {
         }
     }
 }
+
+fn testErrDefer(ptr: *i32) !void {
+    errdefer ptr.* = 0;
+    _ = try conditional_error(0);
+}
+test "errdefer" {
+    var val: i32 = 12;
+    testErrDefer(&val) catch |err| {
+        switch (err) {
+            TestError.Unexcpected => {},
+            else => unreachable,
+        }
+    };
+    try expectEqual(@as(i32, 0), val);
+}

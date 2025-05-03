@@ -2,7 +2,10 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) void {
-    std.debug.print("Building for target: {}\n", .{builtin.os.tag});
+    const option = b.option(bool, "os", "show build os") orelse false;
+    if (option) {
+        std.debug.print("Building for target: {}\n", .{builtin.os.tag});
+    }
     const exe = b.addExecutable(.{
         .name = "main",
         .root_source_file = b.path("main.zig"),

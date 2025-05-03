@@ -984,3 +984,14 @@ test "catch to default error values" {
     const n2 = std.fmt.parseInt(i32, "abc", 10) catch -1;
     try expectEqual(@as(i32, -1), n2);
 }
+
+test "using if to catch errors" {
+    if (std.fmt.parseInt(i32, "422", 10)) |n| {
+        try expectEqual(@as(i32, 422), n);
+    } else |err| {
+        switch (err) {
+            error.Overflow => unreachable,
+            error.InvalidCharacter => unreachable,
+        }
+    }
+}

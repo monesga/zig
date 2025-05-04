@@ -1158,3 +1158,33 @@ test "DoublyLinkedList" {
     const o = list.popFirst();
     try expectEqual(@as(u32, 1), o.?.data);
 }
+
+test "MultiArrayList" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const Person = struct {
+        name: []const u8,
+        age: u8,
+        height: f32,
+    };
+    const PersonArray = std.MultiArrayList(Person);
+    var people = PersonArray{};
+    defer people.deinit(allocator);
+
+    try people.append(allocator, .{ .name = "Mo", .age = 59, .height = 173 });
+    try people.append(allocator, .{ .name = "Le", .age = 59, .height = 160 });
+    try people.append(allocator, .{ .name = "Sa", .age = 35, .height = 180 });
+    try people.append(allocator, .{ .name = "Na", .age = 30, .height = 160 });
+
+    var sumh: f32 = 0;
+    for (people.items(.height)) |*h| { // don't do this, slower
+        sumh += h.*;
+    }
+    try expectEqual(@as(f32, 173 + 160 + 180 + 160), sumh);
+    var suma: u32 = 0;
+    var slice = people.slice(); // do this better performance
+    for (slice.items(.age)) |*a| {
+        suma += a.*;
+    }
+    try expectEqual(@as(u32, 59 * 2 + 35 + 30), suma);
+}

@@ -1136,3 +1136,25 @@ test "StringHashMap" {
     try expectEqual(@as(u16, 1989), sa);
     try expectEqual(@as(u16, 1994), na);
 }
+
+test "SinglyLinkedList" {
+    const Lu32 = std.SinglyLinkedList(u32);
+    var list = Lu32{};
+    var one = Lu32.Node{ .data = 1 };
+    var two = Lu32.Node{ .data = 2 };
+    var three = Lu32.Node{ .data = 3 };
+    list.prepend(&one);
+    one.insertAfter(&two);
+    two.insertAfter(&three);
+}
+
+test "DoublyLinkedList" {
+    const Lu32 = std.DoublyLinkedList(u32);
+    var list = Lu32{};
+    var one = Lu32.Node{ .data = 1 };
+    list.append(&one);
+    var two = Lu32.Node{ .data = 2 };
+    list.append(&two);
+    const o = list.popFirst();
+    try expectEqual(@as(u32, 1), o.?.data);
+}

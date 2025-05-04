@@ -1031,3 +1031,28 @@ test "tagged union" {
     }
     try std.testing.expectEqualStrings("Hello", stringFound.?);
 }
+
+test "ArrayList" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    var list = std.ArrayList(u8).init(allocator);
+    defer list.deinit();
+    try list.append('H');
+    try list.append('e');
+    try list.append('l');
+    try list.append('l');
+    try list.append('o');
+    try list.appendSlice(" World!");
+
+    try expect(std.mem.eql(u8, list.items, "Hello World!"));
+    try expectEqual(@as(usize, 12), list.items.len);
+    const char: u8 = list.pop() orelse 0;
+    try expectEqual(@as(u8, '!'), char);
+    try expectEqual(@as(usize, 11), list.items.len);
+    const c2: u8 = list.orderedRemove(2);
+    try expectEqual(@as(u8, 'l'), c2);
+    try list.insert(2, 'l');
+    try std.testing.expectEqualStrings("Hello World", list.items);
+    try list.insertSlice(0, "OK ");
+    try std.testing.expectEqualStrings("OK Hello World", list.items);
+}

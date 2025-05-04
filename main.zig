@@ -1056,3 +1056,36 @@ test "ArrayList" {
     try list.insertSlice(0, "OK ");
     try std.testing.expectEqualStrings("OK Hello World", list.items);
 }
+
+test "AutoHashMap" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    var map = std.hash_map.AutoHashMap(u32, u16).init(allocator);
+    defer map.deinit();
+    try map.put(422, 1966);
+    try map.put(815, 1989);
+    try map.put(617, 1966);
+    try map.put(609, 1994);
+    try expectEqual(@as(usize, 4), map.count());
+    try expectEqual(@as(u16, 1989), map.get(815));
+    const a = map.remove(422);
+    const b = map.get(422) orelse 0;
+    try expectEqual(@as(u16, 0), b);
+    try expectEqual(true, a);
+    var sumk: u32 = 0;
+    var sumv: u16 = 0;
+    var it = map.iterator();
+    while (it.next()) |kv| {
+        sumk += kv.key_ptr.*;
+        sumv += kv.value_ptr.*;
+    }
+
+    try expectEqual(@as(u32, 1989 + 1966 + 1994), sumv);
+
+    var kit = map.keyIterator();
+    sumk = 0;
+    while (kit.next()) |k| {
+        sumk += k.*;
+    }
+    try expectEqual(@as(u16, 815 + 617 + 609), sumk);
+}

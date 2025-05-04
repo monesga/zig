@@ -1115,3 +1115,24 @@ test "AutoArrayHashMap" {
 
     try expectEqual(@as(u32, 1989 + 1966 + 1994), sumv);
 }
+
+test "StringHashMap" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    var map = std.StringHashMap(u16).init(allocator);
+    defer map.deinit();
+    try map.put("Mo", 1966);
+    try map.put("Le", 1966);
+    try map.put("Sa", 1989);
+    try map.put("Na", 1994);
+
+    const mo = map.get("Mo");
+    const le = map.get("Le");
+    const sa = map.get("Sa");
+    const na = map.get("Na");
+
+    try expectEqual(@as(u16, 1966), mo);
+    try expectEqual(@as(u16, 1966), le);
+    try expectEqual(@as(u16, 1989), sa);
+    try expectEqual(@as(u16, 1994), na);
+}

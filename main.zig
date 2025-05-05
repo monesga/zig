@@ -1314,3 +1314,40 @@ test "Stack" {
         try expectEqual(val, item);
     }
 }
+
+test "File system" {
+    const cwd = std.fs.cwd();
+    try cwd.makeDir("test_dir");
+
+    const newFile = try cwd.createFile("test_dir/test_file.txt", .{});
+    var fw = newFile.writer();
+    _ = try fw.writeAll("Hello, World!");
+    newFile.close();
+
+    const readFile = try cwd.openFile("test_dir/test_file.txt", .{});
+    var fr = readFile.reader();
+    var buffer: [100]u8 = undefined;
+    @memset(buffer[0..100], 0);
+    try readFile.seekFromEnd(0);
+    try readFile.seekTo(0);
+    const bytesRead = try fr.read(buffer[0..]);
+    try expectEqual(@as(u32, 13), bytesRead);
+    try expectEqual(std.mem.eql(u8, buffer[0..bytesRead], "Hello, World!"), true);
+    readFile.close();
+
+    try cwd.copyFile("test_dir/test_file.txt", cwd, "test_dir/test_file_copy.txt", .{});
+
+    var fileCount: u32 = 0;
+    var d = try cwd.openDir("test_dir", .{ .iterate = true });
+    defer d.close();
+    var it = d.iterate();
+    while (try it.next()) |_| {
+        fileCount += 1;
+    }
+    try expectEqual(@as(u32, 2), fileCount);
+
+    try cwd.deleteFile("test_dir/test_file_copy.txt");
+    try cwd.deleteFile("test_dir/test_file.txt");
+
+    try cwd.deleteDir("test_dir");
+}

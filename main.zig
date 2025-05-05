@@ -1214,3 +1214,25 @@ test "type return" {
     const a = s.makeArray(12);
     try expectEqual(@TypeOf(a), type);
 }
+
+pub fn fib(i: u32) u32 {
+    if (i == 0) return 0;
+    if (i == 1) return 1;
+    return fib(i - 1) + fib(i - 2);
+}
+
+test "more comptime" {
+    try expectEqual(@as(u32, 13), fib(7));
+    try comptime expectEqual(@as(u32, 13), fib(7));
+}
+
+test "comptime block" {
+    const x = comptime blk: {
+        const n1 = 3;
+        const n2 = 4;
+        const n3 = n1 + n2;
+        try expectEqual(@as(u32, 13), fib(n3));
+        break :blk n3;
+    };
+    _ = x;
+}

@@ -1251,3 +1251,66 @@ test "generics" {
     const i = s.max(i32, -2, -3); // this will not compile if runtime value
     try expectEqual(@as(i32, -2), i);
 }
+
+fn Stack(comptime T: type) type {
+    return struct {
+        items: []T,
+        count: usize,
+        allocator: std.mem.Allocator,
+
+        const Self = @This();
+
+        pub fn init(allocator: std.mem.Allocator, size: usize) !Stack(T) {
+            const items = try allocator.alloc(T, size);
+            return Stack(T){ .items = items, .count = 0, .allocator = allocator };
+        }
+
+        pub fn deinit(self: *Stack(T)) void {
+            self.allocator.free(self.items);
+        }
+
+        pub fn push(self: *Stack(T), item: T) !void {
+            if (self.count >= self.items.len) {
+                var buff = try self.allocator.alloc(T, self.count * 2);
+                for (0..self.items.len) |i| {
+                    buff[i] = self.items[i];
+                }
+                self.allocator.free(self.items);
+                self.items = buff;
+            }
+            self.items[self.count] = item;
+            self.count += 1;
+        }
+
+        pub fn pop(self: *Stack(T)) ?T {
+            if (self.count == 0) {
+                return null;
+            }
+            self.count -= 1;
+            return self.items[self.count];
+        }
+    };
+}
+
+test "Stack" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const StackU32 = Stack(u32);
+    var stack = try StackU32.init(allocator, 10);
+    defer stack.deinit();
+
+    for (0..10) |i| {
+        try stack.push(@intCast(i));
+    }
+
+    // force stack to expand
+    for (10..20) |i| {
+        try stack.push(@intCast(i));
+    }
+
+    for (0..20) |i| {
+        const item = stack.pop() orelse 0;
+        const val: u32 = @intCast(19 - i);
+        try expectEqual(val, item);
+    }
+}

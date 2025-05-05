@@ -1236,3 +1236,18 @@ test "comptime block" {
     };
     _ = x;
 }
+
+test "generics" {
+    const S = struct {
+        pub fn max(self: @This(), comptime T: type, a: T, b: T) T {
+            _ = self;
+            return if (a > b) a else b;
+        }
+    };
+
+    const s = S{};
+    const n = s.max(u32, 2, 3); // this will not compile if runtime value
+    try expectEqual(@as(u32, 3), n);
+    const i = s.max(i32, -2, -3); // this will not compile if runtime value
+    try expectEqual(@as(i32, -2), i);
+}

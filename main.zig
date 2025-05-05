@@ -1188,3 +1188,29 @@ test "MultiArrayList" {
     }
     try expectEqual(@as(u32, 59 * 2 + 35 + 30), suma);
 }
+
+test "comptime args" {
+    const S = struct {
+        pub fn double(self: @This(), comptime n: u32) u32 {
+            _ = self;
+            return n * 2;
+        }
+    };
+
+    const s = S{};
+    const n = s.double(5); // this will not compile if runtime value
+    try expectEqual(@as(u32, 10), n);
+}
+
+test "type return" {
+    const S = struct {
+        pub fn makeArray(self: @This(), comptime size: usize) type {
+            _ = self;
+            return [size]u8;
+        }
+    };
+
+    const s = S{};
+    const a = s.makeArray(12);
+    try expectEqual(@TypeOf(a), type);
+}

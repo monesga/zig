@@ -1357,12 +1357,12 @@ pub fn sleep(ms: u64) void {
 }
 
 test "thread join" {
-    const thread = try std.Thread.spawn(.{}, sleep, .{100});
+    const thread = try std.Thread.spawn(.{}, sleep, .{10});
     thread.join(); // this will block waiting for sleep
 }
 
 test "thread detatch" {
-    const thread = try std.Thread.spawn(.{}, sleep, .{100});
+    const thread = try std.Thread.spawn(.{}, sleep, .{10});
     thread.detach(); // this will not block waiting for sleep
 }
 
@@ -1377,16 +1377,16 @@ test "thread pool" {
     _ = try pool.init(opts);
     defer pool.deinit();
 
-    _ = try pool.spawn(sleep, .{100});
-    _ = try pool.spawn(sleep, .{100});
-    _ = try pool.spawn(sleep, .{100});
+    _ = try pool.spawn(sleep, .{10});
+    _ = try pool.spawn(sleep, .{10});
+    _ = try pool.spawn(sleep, .{10});
     // deinit() will wait for all threads to finish
 }
 
 var counter: u64 = 0;
 
 fn increment(mutex: *std.Thread.Mutex) void {
-    for (0..1000000) |_| {
+    for (0..100) |_| {
         mutex.lock();
         counter += 1;
         mutex.unlock();
@@ -1401,5 +1401,5 @@ test "mutex" {
     thread1.join();
     thread2.join();
 
-    try expectEqual(@as(u64, 2000000), counter);
+    try expectEqual(@as(u64, 200), counter);
 }

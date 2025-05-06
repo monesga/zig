@@ -1403,3 +1403,19 @@ test "mutex" {
 
     try expectEqual(@as(u64, 200), counter);
 }
+
+test "SIMD vector" {
+    const v1 = @Vector(4, u32){ 1, 2, 3, 4 };
+    const v2 = @Vector(4, u32){ 5, 6, 7, 8 };
+    const v3 = v1 + v2; // this is parallel if SIMD present
+    try expectEqual(@as(u32, 6), v3[0]);
+    try expectEqual(@as(u32, 8), v3[1]);
+    try expectEqual(@as(u32, 10), v3[2]);
+    try expectEqual(@as(u32, 12), v3[3]);
+    const a1 = [4]u32{ 1, 2, 3, 4 };
+    const v4: @Vector(4, u32) = a1; // convert array to vector
+    try expectEqual(@as(u32, 1), v4[0]);
+    const v5: @Vector(10, u32) = @splat(32); // repeat 32 into 10 elements
+    try expectEqual(@as(u32, 32), v5[0]);
+    try expectEqual(@as(u32, 32), v5[9]);
+}

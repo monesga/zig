@@ -1351,3 +1351,17 @@ test "File system" {
 
     try cwd.deleteDir("test_dir");
 }
+
+pub fn sleep(ms: u64) void {
+    std.time.sleep(ms * std.time.ns_per_ms);
+}
+
+test "thread join" {
+    const thread = try std.Thread.spawn(.{}, sleep, .{100});
+    thread.join(); // this will block waiting for sleep
+}
+
+test "thread detatch" {
+    const thread = try std.Thread.spawn(.{}, sleep, .{100});
+    thread.detach(); // this will not block waiting for sleep
+}

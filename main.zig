@@ -1365,3 +1365,20 @@ test "thread detatch" {
     const thread = try std.Thread.spawn(.{}, sleep, .{100});
     thread.detach(); // this will not block waiting for sleep
 }
+
+test "thread pool" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    var pool: std.Thread.Pool = undefined;
+    const opts = std.Thread.Pool.Options{
+        .allocator = allocator,
+        .n_jobs = 2,
+    };
+    _ = try pool.init(opts);
+    defer pool.deinit();
+
+    _ = try pool.spawn(sleep, .{100});
+    _ = try pool.spawn(sleep, .{100});
+    _ = try pool.spawn(sleep, .{100});
+    // deinit() will wait for all threads to finish
+}

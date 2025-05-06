@@ -1382,3 +1382,24 @@ test "thread pool" {
     _ = try pool.spawn(sleep, .{100});
     // deinit() will wait for all threads to finish
 }
+
+var counter: u64 = 0;
+
+fn increment(mutex: *std.Thread.Mutex) void {
+    for (0..1000000) |_| {
+        mutex.lock();
+        counter += 1;
+        mutex.unlock();
+    }
+}
+
+test "mutex" {
+    var mutex: std.Thread.Mutex = .{};
+
+    const thread1 = try std.Thread.spawn(.{}, increment, .{&mutex});
+    const thread2 = try std.Thread.spawn(.{}, increment, .{&mutex});
+    thread1.join();
+    thread2.join();
+
+    try expectEqual(@as(u64, 2000000), counter);
+}

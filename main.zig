@@ -1,7 +1,11 @@
-//! By convention, main.zig is where your main function lives in the case that
-//! you are building an executable. If you are making a library, the convention
-//! is to delete this file and start with root.zig instead.
-
+///
+/// A set of Zig tests for teaching the basics of the Zig programming language
+///
+/// Based by the book "Programming in Zig" by Pedro Duarte Faria
+///
+/// Examples modified manually, or using ChatGPT and other AI
+/// Also updated for latest version of Zig 0.14.0
+///
 const std = @import("std");
 const builtin = @import("builtin");
 const expect = std.testing.expect;

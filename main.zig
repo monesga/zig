@@ -134,31 +134,42 @@ test "blocks" {
 }
 
 test "basic strings" {
-    const stdout = std.io.getStdErr().writer();
+//    const stdout = std.io.getStdErr().writer();
     const str: []const u8 = "Hello, world!";
     try expectEqual(@as(u32, 13), str.len);
     try expectEqual(@as(u8, 'H'), str[0]);
     try expectEqual(@as(u8, 'o'), str[4]);
     try expectEqual(@as(u8, '!'), str[12]);
-    try stdout.print(
-        "<<string: {s} ",
-        .{str},
-    );
-    try stdout.print(
-        "slice[0..5]: {s}>> ",
-        .{str[0..5]},
-    );
+    // try stdout.print(
+    //     "<<string: {s} ",
+    //     .{str},
+    // );
+    // try stdout.print(
+    //     "slice[0..5]: {s}>> ",
+    //     .{str[0..5]},
+    // );
 }
 
 test "string hex loop" {
-    const stdout = std.io.getStdErr().writer();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const alloc = gpa.allocator();
+
     const str: []const u8 = "ABC";
-    try stdout.print("<<str: {s} hex: ", .{str});
+
+    var buf = std.ArrayList(u8).init(alloc);
+    defer buf.deinit();
+    var w = buf.writer();
+
+    try w.print("<<str: {s} hex: ", .{str});
     for (str) |c| {
-        try stdout.print("{X} ", .{c});
+        try w.print("{X} ", .{c});
     }
-    try stdout.print(">>", .{});
+    try w.print(">>", .{});
+
+    try std.testing.expectEqualStrings("<<str: ABC hex: 41 42 43 >>", buf.items);
 }
+
 
 test "string length" {
     const str = "0123456789012345678901234567890123";
@@ -176,8 +187,8 @@ test "@TypeOf" {
     const pa = &arr;
     try expectEqual(@TypeOf(pa), *const [4]u8);
 
-    const stdout = std.io.getStdErr().writer();
-    try stdout.print("<<arr:{}, str:{}, pa:{}>>", .{ @TypeOf(arr), @TypeOf(str), @TypeOf(pa) });
+//    const stdout = std.io.getStdErr().writer();
+//    try stdout.print("<<arr:{}, str:{}, pa:{}>>", .{ @TypeOf(arr), @TypeOf(str), @TypeOf(pa) });
 }
 
 test "UTF-8 raw codepoint" {
